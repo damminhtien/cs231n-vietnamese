@@ -93,7 +93,7 @@ class KNearestNeighbor(object):
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      dists[i, :] = np.sqrt(np.sum(np.square(X[i,:] - self.X_train)))
+      dists[i, :] = np.sqrt(np.sum(np.square(X[i,:] - self.X_train), 1))
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -121,7 +121,14 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    dists = np.sqrt(np.sum(np.square(X - self.X_train)))
+    # (x + y) ** 2 = x ** 2 + y ** 2 - 2 * x * y
+
+    X_square_sum = np.sum(X ** 2, axis=1)
+    X_train_square_sum = np.sum(self.X_train ** 2, axis=1)
+    X_mul_X_train = np.dot(X, self.X_train.T)
+
+    # `np.newaxis` add a new dimension, now X_squared dimension is `num_test x 1`
+    dists = np.sqrt(X_square_sum[:, np.newaxis] + X_train_square_sum - 2 * X_mul_X_train)
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
