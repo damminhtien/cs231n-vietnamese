@@ -1,7 +1,7 @@
 # CS231n Mạng nơron tích chập cho nhận diện trực quan
 ## Intro to image classification, data-driven approach, pipeline (Giới thiệu bài toán phân loại ảnh, cách tiếp cận hướng dữ liệu, kĩ thuật đường ống)
 
-**Từ khóa**: Phân loại ảnh, cách tiếp cận hướng dữ liệu, k-Nearest Neighbor, train/ val/ test splits
+**Từ khóa**: L1/L2 distances, hyperparameter search, cross-validation
 ### Phân loại ảnh:
 **Giới thiệu**: Phân loại ảnh là một trong những vấn đề quan trọng nhất của thị giác máy tính. Với một ảnh đầu vào, ta cần đưa ra ảnh này thuộc lớp nào (các lớp nằm trong một bộ cố định).
 
