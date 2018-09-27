@@ -1,7 +1,7 @@
 # CS231n Mạng nơron tích chập cho nhận diện trực quan
-## Linear Classification (Phân loại tuyến tính)
+## Linear Classification (Phân lớp tuyến tính)
 
-Từ khóa: Linear classification, loss function, SVM, softmax
+Từ khóa: parameteric approach, bias trick, hinge loss, cross-entropy loss, L2 regularization, web demo
 
 Table of Contents:
 
@@ -19,26 +19,24 @@ Table of Contents:
 
 ## Linear Classification
 
-Ở trong bài trước chúng ta đã giới thiệu về bài toán phân loại phân loại ảnh (image classification), với một ảnh cụ thể hãy gán nhãn cho ảnh thuộc lớp nào trong tập các lớp cho trước. Chúng ta cũng đã thử nghiệm bằng thuật toán k láng giềng lân cận (kNN) và giả quyết bài toán hyper-parameters. Như chúng ta đã thấy, kNN vẫn còn nhiều khuyết điểm, khi cho độ chính xác còn thấp ~34%. Ngoài ra:
+Ở trong [lec1](https://github.com/damminhtien/cs231n-vietnamese/blob/master/Lec1_Image_Classifier.md) chúng ta đã giới thiệu về bài toán phân lớp hình ảnh (image classification), với một ảnh cụ thể, gán nhãn cho ảnh trong tập các lớp cho trước. Chúng ta cũng đã thử nghiệm bằng thuật toán k láng giềng lân cận (kNN) và giải quyết bài toán hyper-parameters. Như chúng ta đã thấy, kNN vẫn còn nhiều khuyết điểm, khi cho độ chính xác còn thấp ~34%. Ngoài ra:
 
 - Dữ liệu trong tập train vẫn phải được lưu trữ trong bộ nhớ để so sánh với các dữ liệu mới. Điều này khá thành vấn đề khi độ lớn của tập dữ liêu tăng lên (đôi khi là vài GB)
 - Việc so sánh và tính toán khoảng cách trên toàn tập dữ liệu là tốn kém và ít được lưu lại trong bộ nhớ (cứ có dữ liệu mới ta phải tính toán lại khoảng cách và so sánh)
 
-**Overview**. We are now going to develop a more powerful approach to image classification that we will eventually naturally extend to entire Neural Networks and Convolutional Neural Networks. The approach will have two major components: a **score function** that maps the raw data to class scores, and a **loss function** that quantifies the agreement between the predicted scores and the ground truth labels. We will then cast this as an optimization problem in which we will minimize the loss function with respect to the parameters of the score function.
+**Tổng quan**. Phân lớp tuyến tính là phương pháp đơn giản và phổ biến trong các giải thuật phân lớp, mạng noron nhân tạo cũng là một giải thuật phân lớp tuyến tính. Bài toán đặt ra là tìm một đường phẳng  nhằm chia cắt các điểm dữ liệu sao cho các điểm dữ liệu có cùng thuộc tính (tức chung một lớp) sẽ nắm trong cùng một đường biên (boudary). Phân lớp tuyến tính thực chất là baì toán đi tìm score function (hàm đánh giá) - biểu thị khả năng của dữ liệu có thuộc lớp này và loss function (hàm mất mát) - cho biết độ sai lẹch của lớp được phân loại với nhãn thật, từ đó tối ưu hàm mất mát.
 
 <a name='score'></a>
 
-### Parameterized mapping from images to label scores
+### Ánh xạ từ ảnh sang nhãn
 
-The first component of this approach is to define the score function that maps the pixel values of an image to confidence scores for each class. We will develop the approach with a concrete example. As before, let's assume a training dataset of images \\( x_i \in R^D \\), each associated with a label \\( y_i \\). Here \\( i = 1 \dots N \\) and \\( y_i \in \{ 1 \dots K \} \\). That is, we have **N** examples (each with a dimensionality **D**) and **K** distinct categories. For example, in CIFAR-10 we have a training set of **N** = 50,000 images, each with **D** = 32 x 32 x 3 = 3072 pixels, and **K** = 10, since there are 10 distinct classes (dog, cat, car, etc). We will now define the score function \\(f: R^D \mapsto R^K\\) that maps the raw image pixels to class scores.
+Nhìn từ góc nhìn toán học, bài toán phân lớp tuyến tính chính là định nghĩa hàm ánh xạ f từ tập R với D chiều sang tập R với K chiều, trong đó D là số chiều của ảnh đầu vào và K là số phân lớp. Nói cách khác, từ ma trận ảnh D chiều, ta suy ra ma trận điểm số cho các nhãn K chiều. Ví dụ với tập CIFAR-10, D=32*32*3=3072, K=10.
 
-**Linear classifier.** In this module we will start out with arguably the simplest possible function, a linear mapping:
+**Linear classifier.** Trong module này, chúng ta bắt đầu với hàm f đơn giản nhất:
 
-$$
-f(x_i, W, b) =  W x_i + b
-$$
+<a href="https://www.codecogs.com/eqnedit.php?latex=f(x_i,&space;W,&space;b)&space;=&space;W&space;x_i&space;&plus;&space;b" target="_blank"><img src="https://latex.codecogs.com/gif.latex?f(x_i,&space;W,&space;b)&space;=&space;W&space;x_i&space;&plus;&space;b" title="f(x_i, W, b) = W x_i + b" /></a>
 
-In the above equation, we are assuming that the image \\(x_i\\) has all of its pixels flattened out to a single column vector of shape [D x 1]. The matrix **W** (of size [K x D]), and the vector **b** (of size [K x 1]) are the **parameters** of the function. In CIFAR-10, \\(x_i\\) contains all pixels in the i-th image flattened into a single [3072 x 1] column, **W** is [10 x 3072] and **b** is [10 x 1], so 3072 numbers come into the function (the raw pixel values) and 10 numbers come out (the class scores). The parameters in **W** are often called the **weights**, and **b** is called the **bias vector** because it influences the output scores, but without interacting with the actual data \\(x_i\\). However, you will often hear people use the terms *weights* and *parameters* interchangeably.
+Với dạng phương trình ở trên, chúng ta giả định rằng ảnh x[i] được 'làm phẳng' thành một vector cột [Dx1], ma trận W kích thước [KxD] và vector b [Kx1] là 2 tham số của hàm, ta cần tìm W,b. Trong CIFAR-10, x[i] là ma trận điểm ảnh của ảnh thứ i, là một vector cột 3072x1, W có kích thước 10x3072 và b là 10x1. W được gọi là trọng số (weight) và b được gọi là độ lệch (bias).
 
 There are a few things to note:
 
