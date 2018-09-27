@@ -1,5 +1,5 @@
-# MẠNG NƠ RON TÍCH CHẬP CHO NHẬN DIỆN TRỰC QUAN
-## Intro to image classification, data-driven approach, pipeline
+# CS231n Mạng nơron tích chập cho nhận diện trực quan
+## Intro to image classification, data-driven approach, pipeline (Giới thiệu bài toán phân loại ảnh, cách tiếp cận hướng dữ liệu, kĩ thuật đường ống)
 
 **Từ khóa**: Phân loại ảnh, cách tiếp cận hướng dữ liệu, k-Nearest Neighbor, train/ val/ test splits
 ### Phân loại ảnh:
