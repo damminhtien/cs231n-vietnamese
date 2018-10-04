@@ -5,15 +5,15 @@ Từ khóa: parameteric approach, bias trick, hinge loss, cross-entropy loss, L2
 
 Table of Contents:
 
-- [Intro to Linear classification](#intro)
-- [Linear score function](#score)
-- [Interpreting a linear classifier](#interpret)
-- [Loss function](#loss)
+- [Giới thiệu về phân lớp tuyến tính](#intro)
+- [Hàm đánh giá tuyến tính](#score)
+- [Thực thi phân lớp](#interpret)
+- [Hàm mất mát](#loss)
   - [Multiclass SVM](#svm)
   - [Softmax classifier](#softmax)
   - [SVM vs Softmax](#svmvssoftmax)
-- [Interactive Web Demo of Linear Classification](#webdemo)
-- [Summary](#summary)
+- [Ví dụ trên nền web](#webdemo)
+- [Tổng kết](#summary)
 
 <a name='intro'></a>
 
