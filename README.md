@@ -1,7 +1,7 @@
 # CS231n course in Vietnamese
 Tài liệu khóa học cs231n của đaị học Stanford dịch sang tiếng việt bởi @damminhtien. 
 1. [Image Classification](https://github.com/damminhtien/cs231n-CNN-Vietnamese/blob/master/Lec1_Image_Classifier.md)
-2. [Linear classification](https://github.com/damminhtien/cs231n-CNN-Vietnamese/blob/master/Lec2_Linear_Classifiy.md)
+2. [Linear classification](https://github.com/damminhtien/cs231n-vietnamese/blob/master/Lec2_Linear_Classification.md)
 3. [Optimization](#)
 4. [Backpropagation, Intuitions](#)
 5. [Neural Networks Part 1](#)
