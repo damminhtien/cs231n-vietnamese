@@ -7,7 +7,7 @@ Table of Contents:
 
 - [Giới thiệu về phân lớp tuyến tính](#intro)
 - [Hàm đánh giá tuyến tính](#score)
-- [Thực thi phân lớp](#interpret)
+- [Diễn giải quá trình phân lớp](#interpret)
 - [Hàm mất mát](#loss)
   - [Multiclass SVM](#svm)
   - [Softmax classifier](#softmax)
@@ -38,20 +38,20 @@ Nhìn từ góc nhìn toán học, bài toán phân lớp tuyến tính chính l
 
 Với dạng phương trình ở trên, chúng ta giả định rằng ảnh x[i] được 'làm phẳng' thành một vector cột [Dx1], ma trận W kích thước [KxD] và vector b [Kx1] là 2 tham số của hàm, ta cần tìm W,b. Trong CIFAR-10, x[i] là ma trận điểm ảnh của ảnh thứ i, là một vector cột 3072x1, W có kích thước 10x3072 và b là 10x1. W được gọi là trọng số (weight) và b được gọi là độ lệch (bias).
 
-There are a few things to note:
+Có vài thứ cần được chú ý:
 
-- First, note that the single matrix multiplication \\(W x_i\\) is effectively evaluating 10 separate classifiers in parallel (one for each class), where each classifier is a row of **W**.
-- Notice also that we think of the input data \\( (x_i, y_i) \\) as given and fixed, but we have control over the setting of the parameters **W,b**. Our goal will be to set these in such way that the computed scores match the ground truth labels across the whole training set. We will go into much more detail about how this is done, but intuitively we wish that the correct class has a score that is higher than the scores of incorrect classes.
-- An advantage of this approach is that the training data is used to learn the parameters **W,b**, but once the learning is complete we can discard the entire training set and only keep the learned parameters. That is because a new test image can be simply forwarded through the function and classified based on the computed scores.
-- Lastly, note that classifying the test image involves a single matrix multiplication and addition, which is significantly faster than comparing a test image to all training images.
+- Đầu tiên, lưu ý rằng ma trận tích \\(W x_i\\) được tính bởi 10 lớp một cách đồng thời, mỗi lớp ứng với một hàng của **W**.
+- Để ý rằng chúng ta có dữ liệu đầu vào là cố định, nhưng chúng ta có quyền tùy chỉnh các tham số **W,b** với mục đích tính ra được xác suất đúng với nhãn. Chúng ta sẽ đi sâu hơn vào chi tiết ở phần sau, nhưng ý tưởng chung là mong muốn xác suất nhãn đúng sẽ cao hơn nhãn sai.
+- Một ưu điểm của cách tiếp cận này là dữ liệu tranining được sử dụng để học các tham số **W,b**, nhưng một khi quá trình học kết thúc, ta có thể loại bỏ và không cần quan tâm nữa đến chúng. Đó là bởi vì một bức ảnh mới trong tập test hoàn toàn có thể được tính bằng cách nhân với các ma trận đã học được.
+- Cuối cùng, lưu ý rằng việc phân loại ảnh test chỉ yêu cầu một phép tính nhân và cộng, thay vì phải so sánh với tất cả các ảnh train.
 
-> Foreshadowing: Convolutional Neural Networks will map image pixels to scores exactly as shown above, but the mapping ( f ) will be more complex and will contain more parameters.
+> Bật mí: Mạng nơ-ron tích chập cũng tương tự như cách hàm f ánh xạ với phương pháp linear nhưng sẽ chứa nhiều tham số và tính toán phức tạp hơn.
 
 <a name='interpret'></a>
 
-### Interpreting a linear classifier
+### Diễn giải quá trình phân lớp
 
-Notice that a linear classifier computes the score of a class as a weighted sum of all of its pixel values across all 3 of its color channels. Depending on precisely what values we set for these weights, the function has the capacity to like or dislike (depending on the sign of each weight) certain colors at certain positions in the image. For instance, you can imagine that the "ship" class might be more likely if there is a lot of blue on the sides of an image (which could likely correspond to water). You might expect that the "ship" classifier would then have a lot of positive weights across its blue channel weights (presence of blue increases score of ship), and negative weights in the red/green channels (presence of red/green decreases the score of ship).
+Để ý rằng quá trình phân lớp tính toán điểm cho mỗi class dựa vào tổng tham số của mỗi pixel ở ba chanel (đỏ, lục, lam). Dựa vào giá trị ta đặt cho trọng số, hàm tính toán sẽ thể hiện độ 'like' hoặc 'dislike' với màu sắc nhất định tại các vị trí nhất định trong hình. Lấy ví dụ,  For instance, you can imagine that the "ship" class might be more likely if there is a lot of blue on the sides of an image (which could likely correspond to water). You might expect that the "ship" classifier would then have a lot of positive weights across its blue channel weights (presence of blue increases score of ship), and negative weights in the red/green channels (presence of red/green decreases the score of ship).
 
 <div class="fig figcenter fighighlight">
   <img src="/assets/imagemap.jpg">
