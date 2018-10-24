@@ -1,9 +1,9 @@
 # main text of home
-name: John Doe
-bio: A Man who travels the world eating noodles
+name: CS231n Vietnamese
+bio: Mạng noron tích chập cho nhận diện trực quan
 
 # twitter summary info
-description: A blog about technology and stuff related
+description: Bản dịch cho khóa CS231n của đại học Stanford và lời giải
 
 # if it's an external image, update below for true
 # better with square images
@@ -14,9 +14,9 @@ picture: assets/images/profile.jpg
 # and specify source (external or local).
 resume: true
 resume-external: true
-resume-url: https://google.com/?q=my+resume
+resume-url: https://linkedin.com/in/damminhtien/
 
-url: https://damminhtien.github.io/cs231n-CNN-Vietnamese/
+url: https://damminhtien.github.io/cs231n-vietnamese/
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -34,38 +34,31 @@ disqus:
   categories: [blog, project] # only show disqus for posts that have these categories
 
 # if you don't have any of social below, comment the line
-facebook: myfacebook
-twitter: mytwitter
+facebook: https://www.facebook.com/damminhtienmain
+twitter: https://twitter.com/Dam_Minh_Tien?lang=vi
 # google: mygoogle
 # instagram: myinstagram
 # pinterest: mypinterest
 # linkedin: mylinkedin
 # youtube: myyoutube
 # spotify: myspotify
-github: mygithub
+github: https://github.com/damminhtien/cs231n-vietnamese
 # gitlab: mygitlab
 # lastfm: mylastfm
 # stackoverflow: 7044681/mystackoverflow
 # quora: userquora
 # reddit: username
-medium: medium
+# medium: medium
 # vimeo: myvimeo
 # lanyrd: mylanyrd
-email: myemail@gmail.com
+email: damminhtienchl@gmail.com
 
 authors:
-    johndoe:
-        name: John Doe
-        bio: A Man who travels the world eating noodles
+    damminhtien:
+        name: Dam Minh Tien
+        bio: A technology enthusiast
         external-image: false
-        picture: assets/images/profile.jpg
-        twitter: johndoe
-    jamesfoster:
-        name: James Foster
-        bio: A Man who develops software with coffee
-        external-image: false
-        picture: assets/images/james.jpg
-        twitter: jamesfoster
+        picture: assets/images/avatar.jpg
 
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
