@@ -4,39 +4,39 @@ mathjax: true
 permalink: /classification/
 ---
 
-This is an introductory lecture designed to introduce people from outside of Computer Vision to the Image Classification problem, and the data-driven approach. The Table of Contents:
+Đây là bài giảng giới thiệu về Phân loại hình ảnh (Image Classification) cho người mới bắt đầu dựa trên hướng tiếp cận vào dữ liệu. Nội dung bao gồm:
 
-- [Intro to Image Classification, data-driven approach, pipeline](#intro)
-- [Nearest Neighbor Classifier](#nn)
+- [Giới thiệu về  Phân loại hình ảnh, cách tiếp cận hướng dữ liệu (data-driven), pipeline](#intro)
+- [Bộ phân loại dựa trên PP Các hàng xóm gần nhất (Nearest Neigbors)](#nn)
   - [k-Nearest Neighbor](#knn)
-- [Validation sets, Cross-validation, hyperparameter tuning](#val)
-- [Pros/Cons of Nearest Neighbor](#procon)
-- [Summary](#summary)
-- [Summary: Applying kNN in practice](#summaryapply)
-- [Further Reading](#reading)
+- [Tập kiểm định, Kiểm định chéo, tinh chỉnh siêu tham ](#val)
+- [Ưu/nhược điểm của PP Các hàng xóm gần nhất](#procon)
+- [Tổng kết](#summary)
+- [Tổng kết: Áp dụng kNN](#summaryapply)
+- [Tài liệu khác](#reading)
 
 <a name='intro'></a>
 
-## Image Classification
+## Phân loại hình ảnh
 
-**Motivation**. In this section we will introduce the Image Classification problem, which is the task of assigning an input image one label from a fixed set of categories. This is one of the core problems in Computer Vision that, despite its simplicity, has a large variety of practical applications. Moreover, as we will see later in the course, many other seemingly distinct Computer Vision tasks (such as object detection, segmentation) can be reduced to image classification.
+**Động lực**. Trong phần này chúng tôi sẽ giới thiệu về  bài toán Phân loại hình ảnh (Image Classification), which is the task of assigning an input image one label from a fixed set of categories. This is one of the core problems in Computer Vision that, despite its simplicity, has a large variety of practical applications. Moreover, as we will see later in the course, many other seemingly distinct Computer Vision tasks (such as object detection, segmentation) can be reduced to image classification.
 
-**Example**. For example, in the image below an image classification model takes a single image and assigns probabilities to 4 labels, *{cat, dog, hat, mug}*. As shown in the image, keep in mind that to a computer an image is represented as one large 3-dimensional array of numbers. In this example, the cat image is 248 pixels wide, 400 pixels tall, and has three color channels Red,Green,Blue (or RGB for short). Therefore, the image consists of 248 x 400 x 3 numbers, or a total of 297,600 numbers. Each number is an integer that ranges from 0 (black) to 255 (white). Our task is to turn this quarter of a million numbers into a single label, such as *"cat"*.
+**Ví dụ**. For example, in the image below an image classification model takes a single image and assigns probabilities to 4 labels, *{cat, dog, hat, mug}*. As shown in the image, keep in mind that to a computer an image is represented as one large 3-dimensional array of numbers. In this example, the cat image is 248 pixels wide, 400 pixels tall, and has three color channels Red,Green,Blue (or RGB for short). Therefore, the image consists of 248 x 400 x 3 numbers, or a total of 297,600 numbers. Each number is an integer that ranges from 0 (black) to 255 (white). Our task is to turn this quarter of a million numbers into a single label, such as *"cat"*.
 
 <div class="fig figcenter fighighlight">
   <img src="/assets/classify.png">
   <div class="figcaption">The task in Image Classification is to predict a single label (or a distribution over labels as shown here to indicate our confidence) for a given image. Images are 3-dimensional arrays of integers from 0 to 255, of size Width x Height x 3. The 3 represents the three color channels Red, Green, Blue.</div>
 </div>
 
-**Challenges**. Since this task of recognizing a visual concept (e.g. cat) is relatively trivial for a human to perform, it is worth considering the challenges involved from the perspective of a Computer Vision algorithm. As we present (an inexhaustive) list of challenges below, keep in mind the raw representation of images as a 3-D array of brightness values:
+**Thử thách**. Since this task of recognizing a visual concept (e.g. cat) is relatively trivial for a human to perform, it is worth considering the challenges involved from the perspective of a Computer Vision algorithm. As we present (an inexhaustive) list of challenges below, keep in mind the raw representation of images as a 3-D array of brightness values:
 
-- **Viewpoint variation**. A single instance of an object can be oriented in many ways with respect to the camera.
-- **Scale variation**. Visual classes often exhibit variation in their size (size in the real world, not only in terms of their extent in the image).
-- **Deformation**. Many objects of interest are not rigid bodies and can be deformed in extreme ways.
-- **Occlusion**. The objects of interest can be occluded. Sometimes only a small portion of an object (as little as few pixels) could be visible.
-- **Illumination conditions**. The effects of illumination are drastic on the pixel level.
-- **Background clutter**. The objects of interest may *blend* into their environment, making them hard to identify.
-- **Intra-class variation**. The classes of interest can often be relatively broad, such as *chair*. There are many different types of these objects, each with their own appearance.
+- **Đa dạng góc nhìn**. A single instance of an object can be oriented in many ways with respect to the camera.
+- **Đa dạng tỉ lệ**. Visual classes often exhibit variation in their size (size in the real world, not only in terms of their extent in the image).
+- **Biến dạng**. Many objects of interest are not rigid bodies and can be deformed in extreme ways.
+- **Sự che khuất**. The objects of interest can be occluded. Sometimes only a small portion of an object (as little as few pixels) could be visible.
+- **Các điều kiện ánh sáng**. The effects of illumination are drastic on the pixel level.
+- **Nhiễu nền**. The objects of interest may *blend* into their environment, making them hard to identify.
+- **Đa dạng trong một lớp**. The classes of interest can often be relatively broad, such as *chair*. There are many different types of these objects, each with their own appearance.
 
 A good image classification model must be invariant to the cross product of all these variations, while simultaneously retaining sensitivity to the inter-class variations.
 
@@ -45,25 +45,25 @@ A good image classification model must be invariant to the cross product of all 
   <div class="figcaption"></div>
 </div>
 
-**Data-driven approach**. How might we go about writing an algorithm that can classify images into distinct categories? Unlike writing an algorithm for, for example, sorting a list of numbers, it is not obvious how one might write an algorithm for identifying cats in images. Therefore, instead of trying to specify what every one of the categories of interest look like directly in code, the approach that we will take is not unlike one you would take with a child: we're going to provide the computer with many examples of each class and then develop learning algorithms that look at these examples and learn about the visual appearance of each class. This approach is referred to as a *data-driven approach*, since it relies on first accumulating a *training dataset* of labeled images. Here is an example of what such a dataset might look like:
+**Cách tiếp cận hướng dữ liệu (data-driven)**. How might we go about writing an algorithm that can classify images into distinct categories? Unlike writing an algorithm for, for example, sorting a list of numbers, it is not obvious how one might write an algorithm for identifying cats in images. Therefore, instead of trying to specify what every one of the categories of interest look like directly in code, the approach that we will take is not unlike one you would take with a child: we're going to provide the computer with many examples of each class and then develop learning algorithms that look at these examples and learn about the visual appearance of each class. This approach is referred to as a *data-driven approach*, since it relies on first accumulating a *training dataset* of labeled images. Here is an example of what such a dataset might look like:
 
 <div class="fig figcenter fighighlight">
   <img src="/assets/trainset.jpg">
   <div class="figcaption">An example training set for four visual categories. In practice we may have thousands of categories and hundreds of thousands of images for each category.</div>
 </div>
 
-**The image classification pipeline**. We've seen that the task in Image Classification is to take an array of pixels that represents a single image and assign a label to it. Our complete pipeline can be formalized as follows:
+**Phân loại hình ảnh pipeline**. We've seen that the task in Image Classification is to take an array of pixels that represents a single image and assign a label to it. Our complete pipeline can be formalized as follows:
 
-- **Input:** Our input consists of a set of *N* images, each labeled with one of *K* different classes. We refer to this data as the *training set*.
-- **Learning:** Our task is to use the training set to learn what every one of the classes looks like. We refer to this step as *training a classifier*, or *learning a model*.
-- **Evaluation:** In the end, we evaluate the quality of the classifier by asking it to predict labels for a new set of images that it has never seen before. We will then compare the true labels of these images to the ones predicted by the classifier. Intuitively, we're hoping that a lot of the predictions match up with the true answers  (which we call the *ground truth*).
+- **Đầu vào:** Our input consists of a set of *N* images, each labeled with one of *K* different classes. We refer to this data as the *training set*.
+- **Quá trình học:** Our task is to use the training set to learn what every one of the classes looks like. We refer to this step as *training a classifier*, or *learning a model*.
+- **Đánh giá:** In the end, we evaluate the quality of the classifier by asking it to predict labels for a new set of images that it has never seen before. We will then compare the true labels of these images to the ones predicted by the classifier. Intuitively, we're hoping that a lot of the predictions match up with the true answers  (which we call the *ground truth*).
 
 <a name='nn'></a>
 
-### Nearest Neighbor Classifier
+### Bộ phân loại dựa trên PP Các hàng xóm gần nhất
 As our first approach, we will develop what we call a **Nearest Neighbor Classifier**. This classifier has nothing to do with Convolutional Neural Networks and it is very rarely used in practice, but it will allow us to get an idea about the basic approach to an image classification problem. 
 
-**Example image classification dataset: CIFAR-10.** One popular toy image classification dataset is the <a href="http://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10 dataset</a>. This dataset consists of 60,000 tiny images that are 32 pixels high and wide. Each image is labeled with one of 10 classes (for example *"airplane, automobile, bird, etc"*). These 60,000 images are partitioned into a training set of 50,000 images and a test set of 10,000 images. In the image below you can see 10 random example images from each one of the 10 classes:
+**Ví dụ tập dữ liệu phân loại hình ảnh: CIFAR-10.** One popular toy image classification dataset is the <a href="http://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10 dataset</a>. This dataset consists of 60,000 tiny images that are 32 pixels high and wide. Each image is labeled with one of 10 classes (for example *"airplane, automobile, bird, etc"*). These 60,000 images are partitioned into a training set of 50,000 images and a test set of 10,000 images. In the image below you can see 10 random example images from each one of the 10 classes:
 
 <div class="fig figcenter fighighlight">
   <img src="/assets/nn.jpg">
@@ -139,7 +139,7 @@ class NearestNeighbor(object):
 
 If you ran this code, you would see that this classifier only achieves **38.6%** on CIFAR-10. That's more impressive than guessing at random (which would give 10% accuracy since there are 10 classes), but nowhere near human performance (which is [estimated at about 94%](http://karpathy.github.io/2011/04/27/manually-classifying-cifar10/)) or near state-of-the-art Convolutional Neural Networks that achieve about 95%, matching human accuracy (see the [leaderboard](http://www.kaggle.com/c/cifar-10/leaderboard) of a recent Kaggle competition on CIFAR-10).
 
-**The choice of distance.** 
+**Việc lựa chọn khoảng cách.** 
 There are many other ways of computing distances between vectors. Another common choice could be to instead use the **L2 distance**, which has the geometric interpretation of computing the euclidean distance between two vectors. The distance takes the form:
 
 $$
@@ -211,7 +211,7 @@ By the end of this procedure, we could plot a graph that shows which values of *
 
 > Split your training set into training set and a validation set. Use validation set to tune all hyperparameters. At the end run a single time on the test set and report performance.
 
-**Cross-validation**.
+**Kiểm định chéo**.
 In cases where the size of your training data (and therefore also the validation data) might be small, people sometimes use a more sophisticated technique for hyperparameter tuning called **cross-validation**. Working with our previous example, the idea is that instead of arbitrarily picking the first 1000 datapoints to be the validation set and rest training set, you can get a better and less noisy estimate of how well a certain value of *k* works by iterating over different validation sets and averaging the performance across these. For example, in 5-fold cross-validation, we would split the training data into 5 equal folds, use 4 of them for training, and 1 for validation. We would then iterate over which fold is the validation fold, evaluate the performance, and finally average the performance across the different folds.
 
 <div class="fig figleft fighighlight">
@@ -221,7 +221,7 @@ In cases where the size of your training data (and therefore also the validation
 </div>
 
 
-**In practice**. In practice, people prefer to avoid cross-validation in favor of having a single validation split, since cross-validation can be computationally expensive. The splits people tend to use is between 50%-90% of the training data for training and rest for validation. However, this depends on multiple factors: For example if the number of hyperparameters is large you may prefer to use bigger validation splits. If the number of examples in the validation set is small (perhaps only a few hundred or so), it is safer to use cross-validation. Typical number of folds you can see in practice would be 3-fold, 5-fold or 10-fold cross-validation.
+**Trong thực tế**. In practice, people prefer to avoid cross-validation in favor of having a single validation split, since cross-validation can be computationally expensive. The splits people tend to use is between 50%-90% of the training data for training and rest for validation. However, this depends on multiple factors: For example if the number of hyperparameters is large you may prefer to use bigger validation splits. If the number of examples in the validation set is small (perhaps only a few hundred or so), it is safer to use cross-validation. Typical number of folds you can see in practice would be 3-fold, 5-fold or 10-fold cross-validation.
 
 <div class="fig figcenter fighighlight">
   <img src="/assets/crossval.jpeg">
@@ -230,7 +230,7 @@ In cases where the size of your training data (and therefore also the validation
 
 <a name='procon'></a>
 
-**Pros and Cons of Nearest Neighbor classifier.**
+**Ưu điểm và nhược điểm của PP Các hàng xóm gần nhất**
 
 It is worth considering some advantages and drawbacks of the Nearest Neighbor classifier. Clearly, one advantage is that it is very simple to implement and understand. Additionally, the classifier takes no time to train, since all that is required is to store and possibly index the training data. However, we pay that computational cost at test time, since classifying a test example requires a comparison to every single training example. This is backwards, since in practice we often care about the test time efficiency much more than the efficiency at training time. In fact, the deep neural networks we will develop later in this class shift this tradeoff to the other extreme: They are very expensive to train, but once the training is finished it is very cheap to classify a new test example. This mode of operation is much more desirable in practice.
 
@@ -254,7 +254,7 @@ In particular, note that images that are nearby each other are much more a funct
 
 <a name='summary'></a>
 
-### Summary
+### Tổng kết
 
 In summary:
 
@@ -270,7 +270,7 @@ In next lectures we will embark on addressing these challenges and eventually ar
 
 <a name='summaryapply'></a>
 
-### Summary: Applying kNN in practice
+### Tổng kết: Áp dụng kNN vào thực tế
 
 If you wish to apply kNN in practice (hopefully not on images, or perhaps as only a baseline) proceed as follows:
 
@@ -283,7 +283,7 @@ If you wish to apply kNN in practice (hopefully not on images, or perhaps as onl
 
 <a name='reading'></a>
 
-#### Further Reading
+#### Bài viết khác
 
 Here are some (optional) links you may find interesting for further reading:
 
