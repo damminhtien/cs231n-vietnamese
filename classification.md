@@ -9,7 +9,7 @@ permalink: /classification/
 - [Giới thiệu về  Phân loại hình ảnh, cách tiếp cận hướng dữ liệu (data-driven), pipeline](#intro)
 - [Bộ phân loại dựa trên PP Các hàng xóm gần nhất (Nearest Neigbors)](#nn)
   - [k-Nearest Neighbor](#knn)
-- [Tập kiểm định, Kiểm định chéo, tinh chỉnh siêu tham ](#val)
+- [Tập kiểm định, Kiểm định chéo, tinh chỉnh siêu tham số](#val)
 - [Ưu/nhược điểm của PP Các hàng xóm gần nhất](#procon)
 - [Tổng kết](#summary)
 - [Tổng kết: Áp dụng kNN](#summaryapply)
@@ -19,24 +19,24 @@ permalink: /classification/
 
 ## Phân loại hình ảnh
 
-**Động lực**. Trong phần này chúng tôi sẽ giới thiệu về  bài toán Phân loại hình ảnh (Image Classification), which is the task of assigning an input image one label from a fixed set of categories. This is one of the core problems in Computer Vision that, despite its simplicity, has a large variety of practical applications. Moreover, as we will see later in the course, many other seemingly distinct Computer Vision tasks (such as object detection, segmentation) can be reduced to image classification.
+**Động lực**. Trong phần này chúng tôi sẽ giới thiệu về  bài toán Phân loại hình ảnh (Image Classification), đây là bài toán chúng ta sẽ phải gán ảnh đầu vào với một tập nhãn cố định cho trước. Đây là một trong những vấn đề cốt lõi trong Thị giác máy tính, bất chấp sự đơn giản của nó, có nhiều ứng dụng vào thực tế. Hơn nữa, như chúng ta đã thấy ở bài trước, nhiều bài toán cụ thể khác trong Thị giác máy tính (như phát hiện vật thể, phân vùng), có thể được quy về việc phân loại.
 
-**Ví dụ**. For example, in the image below an image classification model takes a single image and assigns probabilities to 4 labels, *{cat, dog, hat, mug}*. As shown in the image, keep in mind that to a computer an image is represented as one large 3-dimensional array of numbers. In this example, the cat image is 248 pixels wide, 400 pixels tall, and has three color channels Red,Green,Blue (or RGB for short). Therefore, the image consists of 248 x 400 x 3 numbers, or a total of 297,600 numbers. Each number is an integer that ranges from 0 (black) to 255 (white). Our task is to turn this quarter of a million numbers into a single label, such as *"cat"*.
+**Ví dụ**. Cho ví dụ, trong hình dưới đây một mô hình phân loại hình ảnh nhận một bức ảnh và đưa ra xác suất cho 4 nhãn, *{cat, dog, hat, mug}*. Như trong hình, ta nhớ rằng máy tính biểu diễn hình ảnh dưới dạng một ma trận 3 chiều lớn. Trong ví dụ này, tấm hình con mèo gồm 248 pixels chiều rộng, 400 pixels chiều dài, và 3 kênh màu Red,Green,Blue (gọi tắt là RGB). Vì vậy, tấm ảnh chứa 248 x 400 x 3 = 297,600 số. Mỗi số là một số nguyên nằm trong khoảng từ 0 (đen) đến 255 (trắng). Nhiệm vụ của chúng ta là biến 1/4 triệu số này thành 1 nhãn, ví dụ như *"cat"*.
 
 <div class="fig figcenter fighighlight">
   <img src="/cs231n-vietnamese/assets/classify.png">
-  <div class="figcaption">The task in Image Classification is to predict a single label (or a distribution over labels as shown here to indicate our confidence) for a given image. Images are 3-dimensional arrays of integers from 0 to 255, of size Width x Height x 3. The 3 represents the three color channels Red, Green, Blue.</div>
+  <div class="figcaption">Yêu cầu của Phân loại hình ảnh là dự đoán một nhãn (hoặc một phân phối trên nhiều nhãn thể hiện độ tự tin) cho bức ảnh nhận được. Các hình ảnh là các mảng 3 chiều của số nguyên từ 0 đến 255 có kích thước Width x Height x 3. Số 3 thể hiện 3 kênh màu Red, Green, Blue.</div>
 </div>
 
-**Thử thách**. Since this task of recognizing a visual concept (e.g. cat) is relatively trivial for a human to perform, it is worth considering the challenges involved from the perspective of a Computer Vision algorithm. As we present (an inexhaustive) list of challenges below, keep in mind the raw representation of images as a 3-D array of brightness values:
+**Thử thách**. Vì nhiệm vụ nhận biết một khái niệm trực quan (ví dụ: con mèo) tương đối tầm thường đối với con người để thực hiện, nên đáng để xem xét các thách thức liên quan từ quan điểm của thuật toán Thị giác máy tính. Như chúng tôi trình bày (một danh sách đầy đủ) các thách thức dưới đây, nhớ lại rằng biểu diễn thô của hình ảnh dưới dạng mảng 3 chiều của các giá trị độ sáng:
 
-- **Đa dạng góc nhìn**. A single instance of an object can be oriented in many ways with respect to the camera.
-- **Đa dạng tỉ lệ**. Visual classes often exhibit variation in their size (size in the real world, not only in terms of their extent in the image).
-- **Biến dạng**. Many objects of interest are not rigid bodies and can be deformed in extreme ways.
-- **Sự che khuất**. The objects of interest can be occluded. Sometimes only a small portion of an object (as little as few pixels) could be visible.
-- **Các điều kiện ánh sáng**. The effects of illumination are drastic on the pixel level.
-- **Nhiễu nền**. The objects of interest may *blend* into their environment, making them hard to identify.
-- **Đa dạng trong một lớp**. The classes of interest can often be relatively broad, such as *chair*. There are many different types of these objects, each with their own appearance.
+- **Đa dạng góc nhìn (viewpoint variation)**. Một thực thể của đối tượng có thể  được nhìn theo hướng của máy ảnh.
+- **Đa dạng tỉ lệ (scale variation)**. Visual classes often exhibit variation in their size (size in the real world, not only in terms of their extent in the image).
+- **Biến dạng (deformation)**. Many objects of interest are not rigid bodies and can be deformed in extreme ways.
+- **Sự che khuất (occlusion)**. The objects of interest can be occluded. Sometimes only a small portion of an object (as little as few pixels) could be visible.
+- **Các điều kiện ánh sáng (illumation)**. The effects of illumination are drastic on the pixel level.
+- **Nhiễu nền (background clutter)**. The objects of interest may *blend* into their environment, making them hard to identify.
+- **Đa dạng trong một lớp (intra-class variation)**. The classes of interest can often be relatively broad, such as *chair*. There are many different types of these objects, each with their own appearance.
 
 A good image classification model must be invariant to the cross product of all these variations, while simultaneously retaining sensitivity to the inter-class variations.
 
