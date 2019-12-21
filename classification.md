@@ -31,28 +31,28 @@ permalink: /classification/
 **Thử thách**. Vì nhiệm vụ nhận biết một khái niệm trực quan (ví dụ: con mèo) tương đối tầm thường đối với con người để thực hiện, nên đáng để xem xét các thách thức liên quan từ quan điểm của thuật toán Thị giác máy tính. Như chúng tôi trình bày (một danh sách đầy đủ) các thách thức dưới đây, nhớ lại rằng biểu diễn thô của hình ảnh dưới dạng mảng 3 chiều của các giá trị độ sáng:
 
 - **Đa dạng góc nhìn (viewpoint variation)**. Một thực thể của đối tượng có thể  được nhìn theo hướng của máy ảnh.
-- **Đa dạng tỉ lệ (scale variation)**. Visual classes often exhibit variation in their size (size in the real world, not only in terms of their extent in the image).
-- **Biến dạng (deformation)**. Many objects of interest are not rigid bodies and can be deformed in extreme ways.
-- **Sự che khuất (occlusion)**. The objects of interest can be occluded. Sometimes only a small portion of an object (as little as few pixels) could be visible.
-- **Các điều kiện ánh sáng (illumation)**. The effects of illumination are drastic on the pixel level.
-- **Nhiễu nền (background clutter)**. The objects of interest may *blend* into their environment, making them hard to identify.
-- **Đa dạng trong một lớp (intra-class variation)**. The classes of interest can often be relatively broad, such as *chair*. There are many different types of these objects, each with their own appearance.
+- **Đa dạng tỉ lệ (scale variation)**. Các lớp trực quan thường thể hiện sự thay đổi về kích thước của chúng (kích thước trong thế giới thực, không chỉ về mức độ của chúng trong hình ảnh).
+- **Biến dạng (deformation)**. Nhiều đối tượng quan tâm không có thân thể cứng nhắc và có thể bị biến dạng theo những cách cực đoan.
+- **Sự che khuất (occlusion)**. Nhiều đối tượng được quan tâm có thể bị che khuất. Đôi lúc chỉ có một phần nhỏ của đối tượng (một lượng nhỏ điểm ảnh) có thể được hiển thị.
+- **Các điều kiện ánh sáng (illumation)**. Các ảnh hưởng của ánh sáng ảnh rất mạnh tới mức độ của các điểm ảnh.
+- **Nhiễu nền (background clutter)**. Nhiều đối tượng được quan tâm có thể  'hòa' vào với môi trường, khiến chúng khó có thể nhận ra.
+- **Đa dạng trong một lớp (intra-class variation)**. Các lớp quan tâm thường có thể tương đối rộng, chẳng hạn như ghế.  Có nhiều loại khác nhau của các đối tượng này, mỗi loại có ngoại hình riêng.
 
-A good image classification model must be invariant to the cross product of all these variations, while simultaneously retaining sensitivity to the inter-class variations.
+Một mô hình phân loại ảnh tốt phải bất biến đối với tất cả các sự thay đổi, đồng thời duy trì độ nhạy với các biến thể giữa các lớp.
 
 <div class="fig figcenter fighighlight">
   <img src="/cs231n-vietnamese/assets/challenges.jpeg">
   <div class="figcaption"></div>
 </div>
 
-**Cách tiếp cận hướng dữ liệu (data-driven)**. How might we go about writing an algorithm that can classify images into distinct categories? Unlike writing an algorithm for, for example, sorting a list of numbers, it is not obvious how one might write an algorithm for identifying cats in images. Therefore, instead of trying to specify what every one of the categories of interest look like directly in code, the approach that we will take is not unlike one you would take with a child: we're going to provide the computer with many examples of each class and then develop learning algorithms that look at these examples and learn about the visual appearance of each class. This approach is referred to as a *data-driven approach*, since it relies on first accumulating a *training dataset* of labeled images. Here is an example of what such a dataset might look like:
+**Cách tiếp cận hướng dữ liệu (data-driven)**. Làm thế nào chúng ta có thể viết về một thuật toán có thể phân loại hình ảnh thành các loại khác nhau?  Không giống như viết một thuật toán, ví dụ, sắp xếp một danh sách các số, không rõ ràng làm thế nào người ta có thể viết một thuật toán để xác định mèo trong hình ảnh.  Do đó, thay vì cố gắng chỉ định mỗi một loại danh mục sở thích trông như thế nào trong mã, cách tiếp cận mà chúng tôi sẽ thực hiện không giống với cách bạn sẽ làm với một đứa trẻ: chúng tôi sẽ cung cấp cho máy tính nhiều ví dụ về  mỗi lớp và sau đó phát triển các thuật toán học tập xem xét các ví dụ này và tìm hiểu về sự xuất hiện trực quan của mỗi lớp.  Cách tiếp cận này được gọi là một *cách tiếp cận dựa trên dữ liệu*, vì nó dựa vào lần đầu tiên tích lũy một *tập dữ liệu huấn luyện* các hình ảnh được dán nhãn. Dưới đây là một ví dụ về những gì một bộ dữ liệu như vậy có thể trông như thế nào:
 
 <div class="fig figcenter fighighlight">
   <img src="/cs231n-vietnamese/assets/trainset.jpg">
-  <div class="figcaption">An example training set for four visual categories. In practice we may have thousands of categories and hundreds of thousands of images for each category.</div>
+  <div class="figcaption">Một tập dữ liệu huấn luyện ví dụ cho 4 lớp. Trong thực tế chúng ta có thể có hàng ngàn các lớp và hàng triệu ảnh cho mỗi lớp.</div>
 </div>
 
-**Phân loại hình ảnh pipeline**. We've seen that the task in Image Classification is to take an array of pixels that represents a single image and assign a label to it. Our complete pipeline can be formalized as follows:
+**Phân loại hình ảnh pipeline**. Chúng ta đã thấy rằng nhiệm vụ trong Phân loại hình ảnh là lấy một mảng các pixel đại diện cho một hình ảnh duy nhất và gán nhãn cho nó. Our complete pipeline can be formalized as follows:
 
 - **Đầu vào:** Our input consists of a set of *N* images, each labeled with one of *K* different classes. We refer to this data as the *training set*.
 - **Quá trình học:** Our task is to use the training set to learn what every one of the classes looks like. We refer to this step as *training a classifier*, or *learning a model*.
