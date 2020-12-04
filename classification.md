@@ -7,10 +7,10 @@ permalink: /classification/
 Đây là bài giảng giới thiệu về Phân loại hình ảnh (Image Classification) cho người mới bắt đầu dựa trên hướng tiếp cận vào dữ liệu. Nội dung bao gồm:
 
 - [Giới thiệu về  Phân loại hình ảnh, cách tiếp cận hướng dữ liệu (data-driven), pipeline](#intro)
-- [Bộ phân loại dựa trên PP Các hàng xóm gần nhất (Nearest Neigbors)](#nn)
+- [Bộ phân loại dựa trên PP Các láng giềng gần nhất (Nearest Neighbor)](#nn)
   - [k-Nearest Neighbor](#knn)
 - [Tập kiểm định, Kiểm định chéo, tinh chỉnh siêu tham số](#val)
-- [Ưu/nhược điểm của PP Các hàng xóm gần nhất](#procon)
+- [Ưu/nhược điểm của PP Các láng giềng gần nhất](#procon)
 - [Tổng kết](#summary)
 - [Tổng kết: Áp dụng kNN](#summaryapply)
 - [Tài liệu khác](#reading)
@@ -54,38 +54,41 @@ Một mô hình phân loại ảnh tốt phải bất biến đối với tất 
 
 **Phân loại hình ảnh pipeline**. Chúng ta đã thấy rằng nhiệm vụ trong Phân loại hình ảnh là lấy một mảng các pixel đại diện cho một hình ảnh duy nhất và gán nhãn cho nó. Our complete pipeline can be formalized as follows:
 
-- **Đầu vào:** Our input consists of a set of *N* images, each labeled with one of *K* different classes. We refer to this data as the *training set*.
-- **Quá trình học:** Our task is to use the training set to learn what every one of the classes looks like. We refer to this step as *training a classifier*, or *learning a model*.
-- **Đánh giá:** In the end, we evaluate the quality of the classifier by asking it to predict labels for a new set of images that it has never seen before. We will then compare the true labels of these images to the ones predicted by the classifier. Intuitively, we're hoping that a lot of the predictions match up with the true answers  (which we call the *ground truth*).
+- **Đầu vào:** Đầu vào của chúng ta bao gồm một tập gồm *N* ảnh, mỗi ảnh được gán với một trong *K* lớp khác nhau. Chúng tôi gọi dữ liệu này là *tập huấn luyện*.
+- **Quá trình học:** Nhiệm vụ của chúng ta là sử dụng tập huấn luyện để để học thể hiện của mọi lớp. Chúng ta gọi bước này là *huấn luyện một bộ phân loại*, hoặc *học một mô hình*.
+- **Đánh giá:** Cuối cùng, chúng ta đánh giá chât lượng của mô hình bằng việc sử dụng nó để dự đoán các nhãn cho một tập ảnh mà nó chưa thấy trước đây. Sau đó chúng ta so sánh nhãn thật sự của những ảnh này với những nhãn được dự đoán bởi mô hình. Bằng trực giác, chúng ta hi vọng có nhiều dự đoán trùng với câu trả lời đúng (thứ mà chúng ta sẽ gọi là *ground truth*).
 
 <a name='nn'></a>
 
-### Bộ phân loại dựa trên PP Các hàng xóm gần nhất
-As our first approach, we will develop what we call a **Nearest Neighbor Classifier**. This classifier has nothing to do with Convolutional Neural Networks and it is very rarely used in practice, but it will allow us to get an idea about the basic approach to an image classification problem. 
+### Bộ phân loại dựa trên PP các láng giềng gần nhất (Nearest Neighbor)
+Trong cách tiếp cận đầu tiên, chúng ta sẽ phát triển **Bộ phân loại láng giềng gần nhất**. Bộ phân loại này không liên quan gì đến Mạng nơ-ron tích chập và nó rất hiếm khi được sử dụng trong thực tế, nhưng nó sẽ cho phép chúng ta có được ý tưởng về cách tiếp cận cơ bản đối với vấn đề phân loại ảnh.
 
-**Ví dụ tập dữ liệu phân loại hình ảnh: CIFAR-10.** One popular toy image classification dataset is the <a href="http://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10 dataset</a>. This dataset consists of 60,000 tiny images that are 32 pixels high and wide. Each image is labeled with one of 10 classes (for example *"airplane, automobile, bird, etc"*). These 60,000 images are partitioned into a training set of 50,000 images and a test set of 10,000 images. In the image below you can see 10 random example images from each one of the 10 classes:
+**Ví dụ tập dữ liệu phân loại hình ảnh: CIFAR-10.** Một tập dữ liệu phân loại hình ảnh mẫu phổ biến là <a href="http://www.cs.toscape.edu/~kriz/cifar.html"> tập dữ liệu CIFAR-10 </a>.  Tập dữ liệu này bao gồm 60.000 hình ảnh nhỏ có chiều cao và chiều rộng 32 pixel. Mỗi ảnh được gắn nhãn bằng một trong 10 lớp (ví dụ *"airplane, automobile, bird, vân vân"*).  60.000 hình ảnh này được chia thành tập huấn luyện 50.000 hình ảnh và tập kiểm thử 10.000 hình ảnh. Trong hình ảnh bên dưới, bạn có thể thấy 10 hình ảnh ví dụ ngẫu nhiên từ mỗi một trong 10 lớp:
 
 <div class="fig figcenter fighighlight">
   <img src="/cs231n-vietnamese/assets/nn.jpg">
-  <div class="figcaption">Left: Example images from the <a href="http://www.cs.toronto.edu/~kriz/cifar.html">CIFAR-10 dataset</a>. Right: first column shows a few test images and next to each we show the top 10 nearest neighbors in the training set according to pixel-wise difference.</div>
+  <div class="figcaption">Bên trái: Hình ảnh ví dụ từ <a href="http://www.cs.toscape.edu/~kriz/cifar.html"> tập dữ liệu CIFAR-10 </a>. Bên phải: cột đầu tiên hiển thị một vài hình ảnh thử nghiệm và bên cạnh mỗi hình ảnh, chúng ta hiển thị 10 láng giềng gần nhất trong tập huấn luyện theo sự khác biệt của pixel.</div>
 </div>
 
-Suppose now that we are given the CIFAR-10 training set of 50,000 images (5,000 images for every one of the labels), and we wish to label the remaining 10,000. The nearest neighbor classifier will take a test image, compare it to every single one of the training images, and predict the label of the closest training image. In the image above and on the right you can see an example result of such a procedure for 10 example test images. Notice that in only about 3 out of 10 examples an image of the same class is retrieved, while in the other 7 examples this is not the case. For example, in the 8th row the nearest training image to the horse head is a red car, presumably due to the strong black background. As a result, this image of a horse would in this case be mislabeled as a car.
+Giả sử bây giờ chúng ta được cung cấp tập huấn luyện CIFAR-10 gồm 50.000 hình ảnh (5.000 hình ảnh cho mỗi nhãn) và chúng ta muốn gắn nhãn 10.000 hình ảnh còn lại. Bộ phân loại láng giềng gần nhất sẽ lấy một hình ảnh thử nghiệm, so sánh nó với từng hình ảnh huấn luyện và dự đoán nhãn của hình ảnh huấn luyện gần nhất. Trong hình trên và bên phải, bạn có thể thấy kết quả ví dụ của quá trình như vậy cho 10 hình ảnh thử nghiệm ví dụ. Lưu ý rằng chỉ có khoảng 3 trong số 10 ví dụ, một hình ảnh của cùng một lớp được truy xuất, trong khi ở 7 ví dụ khác thì không. Ví dụ, ở hàng thứ 8, hình ảnh huấn luyện gần đầu ngựa nhất là một chiếc xe hơi màu đỏ, có lẽ là do nền đen mạnh. Kết quả là, hình ảnh con ngựa này trong trường hợp này sẽ bị gắn nhãn sai thành một chiếc xe hơi.
 
-You may have noticed that we left unspecified the details of exactly how we compare two images, which in this case are just two blocks of 32 x 32 x 3. One of the simplest possibilities is to compare the images pixel by pixel and add up all the differences. In other words, given two images and representing them as vectors \\( I_1, I_2 \\) , a reasonable choice for comparing them might be the **L1 distance**:
+Bạn có thể nhận thấy rằng chúng tôi không xác định chi tiết chính xác về cách chúng tôi so sánh hai hình ảnh, trong trường hợp này chỉ là hai khối 32 x 32 x 3. Một trong những khả năng đơn giản nhất là so sánh các hình ảnh từng điểm ảnh và cộng lại tất cả sự khác biệt. Nói cách khác, với hai hình ảnh và biểu diễn chúng dưới dạng vectơ \\ (I_1, I_2 \\), một lựa chọn hợp lý để so sánh chúng có thể là **khoảng cách L1**:
 
 $$
 d_1 (I_1, I_2) = \sum_{p} \left| I^p_1 - I^p_2 \right|
 $$
 
 Where the sum is taken over all pixels. Here is the procedure visualized:
+Tổng được lấy trên tất cả các điểm ảnh. Công thức được hình dung:
 
 <div class="fig figcenter fighighlight">
   <img src="/cs231n-vietnamese/assets/nneg.jpeg">
-  <div class="figcaption">An example of using pixel-wise differences to compare two images with L1 distance (for one color channel in this example). Two images are subtracted elementwise and then all differences are added up to a single number. If two images are identical the result will be zero. But if the images are very different the result will be large.</div>
+  <div class="figcaption">Một ví dụ về việc sử dụng sự khác biệt giữa các pixel để so sánh hai hình ảnh có khoảng cách L1 (đối với một kênh màu trong ví dụ này). Hai hình ảnh được trừ theo từng điểm ảnh và sau đó tất cả các khác biệt được cộng lại thành một tổng duy nhất. Nếu hai hình ảnh giống hệt nhau, kết quả sẽ bằng không. Nhưng nếu các hình ảnh rất khác nhau, kết quả sẽ rất lớn.</div>
 </div>
 
 Let's also look at how we might implement the classifier in code. First, let's load the CIFAR-10 data into memory as 4 arrays: the training data/labels and the test data/labels. In the code below, `Xtr` (of size 50,000 x 32 x 32 x 3) holds all the images in the training set, and a corresponding 1-dimensional array `Ytr` (of length 50,000) holds the training labels (from 0 to 9):
+
+Hãy cũng xem xét cách chúng ta có thể lập trình bộ phân loại. Đầu tiên, hãy tải dữ liệu CIFAR-10 vào bộ nhớ dưới dạng 4 mảng: dữ liệu/nhãn huấn luyện và dữ liệu/nhãn kiểm thử.  Trong đoạn mã bên dưới, 'Xtr' (có kích thước 50.000 x 32 x 32 x 3) chứa tất cả các hình ảnh trong tập huấn luyện và mảng 1 chiều tương ứng 'Ytr' (có kích thước 50.000) chứa các nhãn huấn luyện (từ 0  đến 9):
 
 ```python
 Xtr, Ytr, Xte, Yte = load_CIFAR10('data/cifar10/') # a magic function we provide
@@ -94,7 +97,7 @@ Xtr_rows = Xtr.reshape(Xtr.shape[0], 32 * 32 * 3) # Xtr_rows becomes 50000 x 307
 Xte_rows = Xte.reshape(Xte.shape[0], 32 * 32 * 3) # Xte_rows becomes 10000 x 3072
 ```
 
-Now that we have all images stretched out as rows, here is how we could train and evaluate a classifier:
+Bây giờ chúng ta đã có tất cả các hình ảnh được trải thành hàng, đây là cách chúng ta có thể huấn luyện và đánh giá một bộ phân loại:
 
 ```python
 nn = NearestNeighbor() # create a Nearest Neighbor classifier class
@@ -105,8 +108,7 @@ Yte_predict = nn.predict(Xte_rows) # predict labels on the test images
 print 'accuracy: %f' % ( np.mean(Yte_predict == Yte) )
 ```
 
-Notice that as an evaluation criterion, it is common to use the **accuracy**, which measures the fraction of predictions that were correct. Notice that all classifiers we will build satisfy this one common API: they have a `train(X,y)` function that takes the data and the labels to learn from. Internally, the class should build some kind of model of the labels and how they can be predicted from the data. And then there is a `predict(X)` function, which takes new data and predicts the labels. Of course, we've left out the meat of things - the actual classifier itself. Here is an implementation of a simple Nearest Neighbor classifier with the L1 distance that satisfies this template:
-
+Lưu ý rằng để đánh giá, người ta thường sử dụng **độ chính xác**, đo lường khả năng dự đoán đúng. Lưu ý rằng tất cả các bộ phân loại mà chúng ta sẽ xây dựng đều đáp ứng một API chung này: chúng có hàm 'train (X, y)' lấy dữ liệu và nhãn để học. Trong nội bộ, một lớp nên xây dựng một vài mô hình nhãn và cách chúng có thể được dự đoán từ dữ liệu. Và sau đó có một hàm 'dự đoán (X)', lấy dữ liệu mới và dự đoán các nhãn. Tất nhiên, chúng ta đã bỏ đi phần chi tiết của mọi thứ - bộ phân loại thực tế. Đây là cách triển khai bộ phân loại láng giềng gần nhất đơn giản với khoảng cách L1 thỏa mãn mẫu này:
 ```python
 import numpy as np
 
@@ -230,7 +232,7 @@ In cases where the size of your training data (and therefore also the validation
 
 <a name='procon'></a>
 
-**Ưu điểm và nhược điểm của PP Các hàng xóm gần nhất**
+**Ưu điểm và nhược điểm của PP Các láng giềng gần nhất**
 
 It is worth considering some advantages and drawbacks of the Nearest Neighbor classifier. Clearly, one advantage is that it is very simple to implement and understand. Additionally, the classifier takes no time to train, since all that is required is to store and possibly index the training data. However, we pay that computational cost at test time, since classifying a test example requires a comparison to every single training example. This is backwards, since in practice we often care about the test time efficiency much more than the efficiency at training time. In fact, the deep neural networks we will develop later in this class shift this tradeoff to the other extreme: They are very expensive to train, but once the training is finished it is very cheap to classify a new test example. This mode of operation is much more desirable in practice.
 
